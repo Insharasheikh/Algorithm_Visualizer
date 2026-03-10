@@ -9,6 +9,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import algorithms.searching.LinearSearch;
+import algorithms.searching.BinarySearch;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,10 +26,16 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        // --- REGISTER ALGORITHMS HERE ---
+        // REGISTER ALGORITHMS  
         algoMap.put("BubbleSort", new BubbleSort());
         algoMap.put("InsertionSort", new InsertionSort());
-        // add more algorithms later like algoMap.put("SelectionSort", new SelectionSort());
+        algoMap.put("SelectionSort", new SelectionSort());
+        algoMap.put("MergeSort", new MergeSort());
+        algoMap.put("QuickSort", new QuickSort());
+
+        algoMap.put("LinearSearch", new LinearSearch());
+        algoMap.put("BinarySearch", new BinarySearch());
+        // add more algorithms 
 
         StepController stepController = new StepController();
         VisualizationPane vizPane = new VisualizationPane(stepController);
@@ -46,7 +54,7 @@ public class Main extends Application {
         // Draw initial array
         vizPane.updateArray(originalArray);
 
-        // --- START BUTTON ---
+        //START BUTTON 
         controlBar.startBtn.setOnAction(e -> {
             if (sortingThread != null && sortingThread.isAlive()) return;
 

@@ -3,7 +3,7 @@ package core;
 public class StepController {
     private boolean paused = false;
 
-    // --- Pause / Resume ---
+    // Pause / Resume 
     public synchronized void pause() {
         paused = true;
     }

@@ -25,8 +25,12 @@ public class ControlBar extends HBox {
         algorithmSelector = new ComboBox<>();
         algorithmSelector.getItems().addAll(
             "BubbleSort",
-            "InsertionSort"
-            // Add more algorithms here
+            "InsertionSort",
+            "SelectionSort",
+            "MergeSort",
+            "QuickSort",
+            "LinearSearch",
+            "BinarySearch"
         );
         algorithmSelector.getSelectionModel().selectFirst(); // default selection
 

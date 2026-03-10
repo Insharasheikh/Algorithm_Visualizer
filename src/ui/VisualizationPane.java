@@ -1,54 +1,95 @@
 package ui;
 
+import core.StepController;
 import javafx.application.Platform;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import core.StepController;
 
+/**
+ * Renders the array as colored bars.
+ *
+ * Color scheme:
+ *   DODGERBLUE  = default / unsorted bar
+ *   ORANGE      = bar at index1 (first comparison target / current element)
+ *   RED         = bar at index2 (second comparison target)
+ *   LIMEGREEN   = sorted region (index >= sortedFrom) or found element
+ *   GOLD        = pivot / key element (special highlight)
+ */
 public class VisualizationPane extends Pane {
 
-    private StepController stepController;
-    private Rectangle[] bars;
-    private double paneHeight = 400;
+    private static final double PANE_HEIGHT = 380;
+    private static final double BAR_GAP = 4;
+    private static final int    BAR_SCALE = 35; // pixels per unit value
 
     public VisualizationPane(StepController stepController) {
-        this.stepController = stepController;
-        this.setPrefHeight(paneHeight);
-        this.setStyle("-fx-background-color: #ecf0f1;");
+        this.setPrefHeight(PANE_HEIGHT);
+        this.setStyle("-fx-background-color: #1e1e2e; -fx-background-radius: 8;");
     }
 
     /**
-     * Draw array as bars with values on top
+     * Thread-safe array update with optional bar highlights.
+     *
+     * @param array      current array state
+     * @param index1     first highlighted bar  (-1 = none) — shown in ORANGE
+     * @param index2     second highlighted bar (-1 = none) — shown in RED
+     * @param sortedFrom bars from this index onwards are sorted (-1 = none) — shown in GREEN
+     *                   pass 0 to mark the entire array green (fully sorted)
+     * @param specialIdx pivot / key / found element (-1 = none) — shown in GOLD
      */
-    private void drawArray(int[] array) {
-        this.getChildren().clear();
-        bars = new Rectangle[array.length];
+    public void updateArray(int[] array, int index1, int index2, int sortedFrom, int specialIdx) {
+        int[] snapshot = array.clone();
+        Platform.runLater(() -> drawArray(snapshot, index1, index2, sortedFrom, specialIdx));
+    }
 
-        double width = this.getWidth() / array.length;
+    /** Convenience overload — draws all bars in default blue (used for reset/init). */
+    public void updateArray(int[] array) {
+        updateArray(array, -1, -1, -1, -1);
+    }
+
+    // ── Private drawing ──────────────────────────────────────────────────────
+
+    private void drawArray(int[] array, int index1, int index2, int sortedFrom, int specialIdx) {
+        this.getChildren().clear();
+
+        double paneWidth  = Math.max(this.getWidth(), 400);
+        double barWidth   = (paneWidth - BAR_GAP) / array.length - BAR_GAP;
+
+        int maxVal = 1;
+        for (int v : array) if (v > maxVal) maxVal = v;
+
+        // Scale bars to fit pane height nicely (leave 30px for labels)
+        double scale = (PANE_HEIGHT - 30) / (double) maxVal;
 
         for (int i = 0; i < array.length; i++) {
-            Rectangle rect = new Rectangle(width - 5, array[i] * 10);
-            rect.setFill(Color.DODGERBLUE);
-            rect.setX(i * width);
-            rect.setY(paneHeight - array[i] * 10);
+            double barHeight = array[i] * scale;
+            double x = BAR_GAP + i * (barWidth + BAR_GAP);
+            double y = PANE_HEIGHT - barHeight - 20;
 
-            bars[i] = rect;
-            this.getChildren().add(rect);
+            Color color;
+            if (i == specialIdx)                               color = Color.GOLD;
+            else if (sortedFrom == 0)                          color = Color.LIMEGREEN; // fully sorted
+            else if (sortedFrom > 0 && i >= sortedFrom)        color = Color.LIMEGREEN;
+            else if (i == index1)                              color = Color.ORANGE;
+            else if (i == index2)                              color = Color.TOMATO;
+            else                                               color = Color.DODGERBLUE;
 
-            Text valueText = new Text(String.valueOf(array[i]));
-            valueText.setX(i * width + width / 4);
-            valueText.setY(paneHeight - array[i] * 10 - 5);
-            this.getChildren().add(valueText);
+            Rectangle bar = new Rectangle(barWidth, barHeight);
+            bar.setFill(color);
+            bar.setArcWidth(4);
+            bar.setArcHeight(4);
+            bar.setX(x);
+            bar.setY(y);
+            this.getChildren().add(bar);
+
+            // Value label below bar
+            Text label = new Text(String.valueOf(array[i]));
+            label.setFill(Color.WHITE);
+            label.setStyle("-fx-font-size: 11px;");
+            label.setX(x + barWidth / 2 - 5);
+            label.setY(PANE_HEIGHT - 4);
+            this.getChildren().add(label);
         }
-    }
-
-    /**
-     * Thread-safe update
-     */
-    public void updateArray(int[] array) {
-        int[] snapshot = array.clone();
-        Platform.runLater(() -> drawArray(snapshot));
     }
 }

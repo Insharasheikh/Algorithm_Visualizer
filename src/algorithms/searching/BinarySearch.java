@@ -1,80 +1,83 @@
 package algorithms.searching;
 
-import algorithms.sorting.SortAlgorithm;
+import algorithms.Algorithm;
+import core.StepController;
 import ui.CodePane;
 import ui.VisualizationPane;
-
 import java.util.Arrays;
 
-public class BinarySearch implements SortAlgorithm {
+public class BinarySearch implements Algorithm {
+
+    private final String[] codeLines = new String[]{
+        "low = 0, high = n-1",
+        "while low <= high",
+        "  mid = (low + high) / 2",
+        "  if arr[mid] == target → return mid",
+        "  else if arr[mid] < target → low = mid+1",
+        "  else → high = mid-1"
+    };
 
     @Override
-    public String[] getCode() {
-        return new String[]{
-                "low = 0, high = n-1",
-                "while low <= high",
-                "   mid = (low + high) / 2",
-                "   if arr[mid] == target return mid",
-                "   else if arr[mid] < target low = mid+1",
-                "   else high = mid-1"
-        };
-    }
+    public String[] getCode() { return codeLines; }
 
     @Override
-    public String getTimeComplexity() {
-        return "O(log n)";
-    }
+    public String getTimeComplexity() { return "O(log n)"; }
 
     @Override
-    public void sort(int[] arr, VisualizationPane vizPane, CodePane codePane, int speed) {
+    public void run(int[] arr, VisualizationPane vizPane, CodePane codePane, int speed, StepController stepController) {
+        try {
+            // Binary search requires sorted array
+            Arrays.sort(arr);
+            vizPane.updateArray(arr, -1, -1, -1, -1);
+            Thread.sleep(speed);
 
-        Arrays.sort(arr); // binary search needs sorted array
-        vizPane.updateArray(arr);
+            int target = arr[arr.length / 2]; // search for middle value as demo
 
-        int target = arr[arr.length - 1];
+            int low = 0;
+            int high = arr.length - 1;
 
-        int low = 0;
-        int high = arr.length - 1;
+            codePane.highlightLine(0);
+            vizPane.updateArray(arr, low, high, -1, -1);
+            Thread.sleep(speed);
 
-        codePane.highlightLine(1);
-        sleep(speed);
+            while (low <= high) {
+                if (Thread.currentThread().isInterrupted()) return;
+                stepController.waitIfPaused();
 
-        while (low <= high) {
+                codePane.highlightLine(1);
+                Thread.sleep(speed / 2);
 
-            codePane.highlightLine(2);
+                int mid = (low + high) / 2;
 
-            int mid = (low + high) / 2;
+                codePane.highlightLine(2);
+                // low=red, high=red, mid=yellow (reuse highlight colors)
+                vizPane.updateArray(arr, low, high, -1, mid);
+                Thread.sleep(speed);
 
-            codePane.highlightLine(3);
-            vizPane.updateArray(arr);
-            sleep(speed);
+                if (arr[mid] == target) {
+                    codePane.highlightLine(3);
+                    vizPane.updateArray(arr, mid, mid, -1, mid); // found
+                    Thread.sleep(speed * 2);
+                    return;
 
-            if (arr[mid] == target) {
+                } else if (arr[mid] < target) {
+                    codePane.highlightLine(4);
+                    low = mid + 1;
 
-                codePane.highlightLine(4);
-                sleep(speed);
-                return;
+                } else {
+                    codePane.highlightLine(5);
+                    high = mid - 1;
+                }
 
-            } else if (arr[mid] < target) {
-
-                codePane.highlightLine(5);
-                low = mid + 1;
-
-            } else {
-
-                codePane.highlightLine(6);
-                high = mid - 1;
+                vizPane.updateArray(arr, low, high, -1, mid);
+                Thread.sleep(speed);
             }
 
-            sleep(speed);
-        }
-    }
+            // Not found
+            vizPane.updateArray(arr, -1, -1, -1, -1);
 
-    private void sleep(int speed){
-        try{
-            Thread.sleep(speed);
-        }catch(Exception e){
-            return;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

@@ -2,15 +2,10 @@ package algorithms.sorting;
 
 import ui.CodePane;
 import ui.VisualizationPane;
+import core.StepController;
 
-
-public interface SortAlgorithm {
-    //Return the lines of code for displaying in CodePane
+public interface SortAlgorithm extends Algorithm {
     String[] getCode();
-
-    // Return time complexity as string
     String getTimeComplexity();
-
-    // The sorting logic with visualization
-    void sort(int[] arr, VisualizationPane vizPane, CodePane codePane, int speed);
+    void sort(int[] arr, VisualizationPane vizPane, CodePane codePane, int speed, StepController stepController);
 }

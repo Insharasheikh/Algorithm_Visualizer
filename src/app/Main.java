@@ -126,26 +126,46 @@ public class Main extends Application {
                     return;
                 }
 
-                // Resolve src node
-                String srcLabel  = ctrlBar.getSelectedSrc();
-                String destLabel = ctrlBar.getSelectedDest(); // may be null
+                // Resolve src node — for non-topo algos, src is required
+                GraphNode startNode = null;
+                GraphNode endNode   = null;
 
-                GraphNode startNode = resolveNode(nodes, srcLabel);
-                if (startNode == null) startNode = nodes.get(0); // fallback
+                if (!algoName.equals("TopologicalSort")) {
+                    String srcLabel = ctrlBar.getSelectedSrc();
+                    if (srcLabel == null || srcLabel.isEmpty()) {
+                        complexityLabel.setText("\u26A0 Please select a source node!");
+                        return;
+                    }
+                    startNode = resolveNode(nodes, srcLabel);
+                    if (startNode == null) {
+                        complexityLabel.setText("\u26A0 Selected source node no longer exists!");
+                        return;
+                    }
+                    String destLabel = ctrlBar.getSelectedDest();
+                    endNode = (destLabel != null) ? resolveNode(nodes, destLabel) : null;
 
-                GraphNode endNode = (destLabel != null) ? resolveNode(nodes, destLabel) : null;
-
-                // TopologicalSort ignores src/dest
-                if (algoName.equals("TopologicalSort")) {
-                    endNode = null;
+                    // Fix #3 — same node selected for src and dest
+                    if (endNode != null && endNode.id == startNode.id) {
+                        complexityLabel.setText("\u26A0 Source and destination must be different nodes!");
+                        return;
+                    }
+                } else {
+                    // TopologicalSort — no src/dest needed, just use first node as dummy
+                    startNode = nodes.get(0);
+                    endNode   = null;
+                    graphPane.setSrcDest(null, null); // no rings for topo
                 }
 
-                // Mark src/dest visually on the canvas
-                graphPane.setSrcDest(startNode, endNode);
+                // Mark src/dest visually on the canvas (topo already set null,null above)
+                if (!algoName.equals("TopologicalSort")) {
+                    graphPane.setSrcDest(startNode, endNode);
+                }
                 graphPane.resetVisualization();
                 codePane.setCode(algo.getCode());
                 complexityLabel.setText("Time Complexity: " + algo.getTimeComplexity()
-                    + (endNode != null ? "   |   " + startNode.label + " \u2192 " + endNode.label : "   |   Start: " + startNode.label));
+                    + (algoName.equals("TopologicalSort") ? ""
+                       : endNode != null ? "   |   " + startNode.label + " \u2192 " + endNode.label
+                       : "   |   Start: " + startNode.label));
 
                 // Get LIVE edges (captures any weight edits done before Start)
                 List<GraphEdge> liveEdges = graphPane.getEdges();
@@ -275,7 +295,7 @@ public class Main extends Application {
 
         algoThreadWatcher(ctrlBar);
 
-        Scene scene = new Scene(root, 1100, 580);
+        Scene scene = new Scene(root, 1280, 660);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Algorithm Visualizer");
         primaryStage.show();

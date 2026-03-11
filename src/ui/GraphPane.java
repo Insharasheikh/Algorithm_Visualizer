@@ -54,6 +54,8 @@ public class GraphPane extends Pane {
     public List<GraphNode> getNodes() { return nodes; }
     public List<GraphEdge> getEdges() { return edges; }
     public void setDirected(boolean d) { this.isDirected = d; redraw(); }
+    public boolean isDirected() { return isDirected; }
+    public boolean isDirected() { return isDirected; }
 
     public void setSrcDest(GraphNode src, GraphNode dest) {
         this.srcNode  = src;
